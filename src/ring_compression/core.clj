@@ -50,14 +50,21 @@
     (has-class? default-deflate-class)
     (conj {:algorithm "deflate" :priority 0.8})))
 
+(def prefer-gzip
+  (cond-> []
+    (has-class? default-gzip-class)
+    (conj {:algorithm "gzip" :priority 0.9})
+    (has-class? default-deflate-class)
+    (conj {:algorithm "deflate" :priority 0.8})))
+
 (def default-preferences-by-content-type
   {"text/*"                   prefer-brotli
-   "application/json"         prefer-brotli
    "application/javascript"   prefer-brotli
-   "application/xml"          prefer-brotli
-   "application/edn"          prefer-brotli
-   "application/transit+json" prefer-brotli
    "image/svg+xml"            prefer-brotli
+   "application/json"         prefer-gzip
+   "application/xml"          prefer-gzip
+   "application/edn"          prefer-gzip
+   "application/transit+json" prefer-gzip
    "*"                        []})
 
 (def default-compressors
