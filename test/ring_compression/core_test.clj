@@ -1,7 +1,8 @@
 (ns ring-compression.core-test
   (:require [clojure.test :refer :all]
             [ring-compression.core :refer :all]
-            [ring.core.protocols :as protos])
+            [ring.core.protocols :as protos]
+            [clojure.string :as strings])
   (:import (java.io ByteArrayOutputStream ByteArrayInputStream)
            (java.util.zip GZIPInputStream InflaterInputStream)))
 

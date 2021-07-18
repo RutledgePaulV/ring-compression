@@ -7,15 +7,14 @@
            (clojure.lang Reflector)))
 
 (defn parse-accepted-encoding [encoding]
-  (let [re #"(gzip|compress|deflate|br|identity|\*)(?:;q=([\d.]+))?"]
+  (let [re #"^(gzip|compress|deflate|br|identity|\*)(?:;q=([\d.]+))?$"]
     (when-some [[_ algorithm priority] (re-find re encoding)]
       {:algorithm algorithm :priority (Double/parseDouble (or priority "1"))})))
 
 (defn get-encoding-maps [accept-encoding-header]
   (->> (strings/split accept-encoding-header #"\s*,\s*")
-       (remove strings/blank?)
        (map parse-accepted-encoding)
-       (sort-by :priority #(compare %2 %1))))
+       (vec)))
 
 (defn get-accepted-encoding [request]
   (or (get-in request [:headers "Accept-Encoding"])
@@ -80,24 +79,29 @@
   (reduce (fn [agg {:keys [algorithm priority]}]
             (if (zero? priority)
               (dissoc agg algorithm)
-              (if (contains? agg algorithm)
-                agg
-                (assoc agg algorithm {:algorithm algorithm :priority priority}))))
-          {}
-          (into [{:algorithm "identity" :priority 0.001}] preferences)))
+              (update agg algorithm #(or % {:algorithm algorithm :priority priority}))))
+          {"identity" {:algorithm "identity" :priority 0.001}}
+          preferences))
 
-(defn prioritized-preferences [preferences]
-  (->> preferences
-       (reduce (fn [agg {:keys [algorithm priority]}]
-                 (update agg priority (fnil conj #{}) algorithm)) {})
-       (into (sorted-map-by #(compare %2 %1)))))
+(defn bubble-top-algo [preferences]
+  (reduce
+    (fn [[max-score algorithms :as agg] {:keys [algorithm priority]}]
+      (cond
+        (< max-score priority)
+        [priority #{algorithm}]
+        (== max-score priority)
+        [max-score (conj algorithms algorithm)]
+        :otherwise
+        agg))
+    [Double/MIN_VALUE #{}]
+    preferences))
 
 (defn negotiate [server-preferences client-preferences]
   (let [compiled-server  (finalize-preferences server-preferences)
         compiled-client  (finalize-preferences client-preferences)
-        shared-keys      (sets/intersection (set (keys compiled-server)) (set (keys compiled-client)))
-        compiled-client' (select-keys compiled-client (conj shared-keys "*"))
-        [_ algorithms] (first (prioritized-preferences (vals compiled-client')))]
+        remove-keys      (sets/difference (set (keys compiled-client)) (set (keys compiled-server)))
+        compiled-client' (apply dissoc compiled-client (disj remove-keys "*"))
+        [_ algorithms] (bubble-top-algo (vec (vals compiled-client')))]
     (cond
       (contains? algorithms "*")
       (second
@@ -106,7 +110,7 @@
                     [priority algorithm]
                     [max-score winner]))
                 [Double/MIN_VALUE nil]
-                (vals compiled-server)))
+                (vec (vals compiled-server))))
       (< 1 (count algorithms))
       (second
         (reduce (fn [[max-score winner] {:keys [priority algorithm]}]
@@ -114,7 +118,7 @@
                     [priority algorithm]
                     [max-score winner]))
                 [Double/MIN_VALUE nil]
-                (map compiled-server algorithms)))
+                (mapv compiled-server algorithms)))
       :otherwise
       (first algorithms))))
 
