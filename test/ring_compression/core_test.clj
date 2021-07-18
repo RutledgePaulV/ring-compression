@@ -1,10 +1,23 @@
 (ns ring-compression.core-test
   (:require [clojure.test :refer :all]
             [ring-compression.core :refer :all]
-            [ring.core.protocols :as protos]
-            [clojure.string :as strings])
+            [ring.core.protocols :as protos])
   (:import (java.io ByteArrayOutputStream ByteArrayInputStream)
            (java.util.zip GZIPInputStream InflaterInputStream)))
+
+(deftest parsing-headers-test
+  (testing "no header defaults to server preferences"
+    (is (= "*" (get-accepted-encoding {}))))
+  (testing "uppercase header"
+    (is (= "identity;q=1" (get-accepted-encoding {:headers {"Accept-Encoding" "identity;q=1"}}))))
+  (testing "lowercase header"
+    (is (= "identity;q=1" (get-accepted-encoding {:headers {"accept-encoding" "identity;q=1"}}))))
+  (testing "default priority to 1"
+    (is (= [{:algorithm "identity" :priority 1.0}]
+           (get-encoding-maps (get-accepted-encoding {:headers {"accept-encoding" "identity"}})))))
+  (testing "multiple encodings"
+    (is (= [{:algorithm "deflate", :priority 1.0} {:algorithm "gzip", :priority 0.8}]
+           (get-encoding-maps (get-accepted-encoding {:headers {"accept-encoding" "deflate;q=1,gzip;q=0.8"}}))))))
 
 (deftest negotiate-test
   (testing "unspecified preference by client indicates identity"
