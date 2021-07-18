@@ -146,9 +146,9 @@
                      (assoc-in [:headers "Vary"] (if (strings/blank? vary) "Content-Encoding" (str vary ", Content-Encoding")))
                      (update :headers dissoc "Content-Length" "content-length" "content-encoding" "vary")
                      (assoc :body (reify protos/StreamableResponseBody
-                                    (write-body-to-stream [body response output-stream]
+                                    (write-body-to-stream [body res output-stream]
                                       (with-open [out ((get compressors algorithm) output-stream)]
-                                        (protos/write-body-to-stream (:body response) response out)))))))))]
+                                        (protos/write-body-to-stream (:body response) res out)))))))))]
      (fn compression-handler
        ([request] (make-response request (handler request)))
        ([request respond raise]
