@@ -2,7 +2,7 @@
 <small>
 <br/><br/><br/><br/><br/>
 Clojure middleware for response encoding negotiation and compression. Natively supports gzip
-and deflate compression. Support for brotli can be enabled by including [brotli](https://github.com/google/brotli)
+and deflate compression. Support for brotli can be enabled by including <a href="https://github.com/google/brotli">brotli</a>
 on your classpath.
 </small>
 <br clear="all" /><br />
