@@ -50,23 +50,15 @@
     (has-class? default-deflate-class)
     (conj {:algorithm "deflate" :priority 0.8})))
 
-(def prefer-gzip
-  (cond-> []
-    (has-class? default-gzip-class)
-    (conj {:algorithm "gzip" :priority 1.0})
-    (has-class? default-deflate-class)
-    (conj {:algorithm "deflate" :priority 0.9})))
-
 (def default-preferences-by-content-type
-  {"text/*"                 prefer-brotli
-   "application/json"       prefer-brotli
-   "application/javascript" prefer-brotli
-   "application/xml"        prefer-brotli
-   "image/svg+xml"          prefer-brotli
-   "application/*"          []
-   "image/*"                []
-   "video/*"                []
-   "*"                      prefer-gzip})
+  {"text/*"                   prefer-brotli
+   "application/json"         prefer-brotli
+   "application/javascript"   prefer-brotli
+   "application/xml"          prefer-brotli
+   "application/edn"          prefer-brotli
+   "application/transit+json" prefer-brotli
+   "image/svg+xml"            prefer-brotli
+   "*"                        []})
 
 (def default-compressors
   {"gzip"     (fn [^OutputStream stream]
@@ -88,7 +80,7 @@
           (into [{:algorithm "identity" :priority 0.001}] preferences)))
 
 (defn prioritized-preferences [preferences]
-  (->> (vals preferences)
+  (->> preferences
        (reduce (fn [agg {:keys [algorithm priority]}]
                  (update agg priority (fnil conj #{}) algorithm)) {})
        (into (sorted-map-by #(compare %2 %1)))))
@@ -98,7 +90,7 @@
         compiled-client  (finalize-preferences client-preferences)
         shared-keys      (sets/intersection (set (keys compiled-server)) (set (keys compiled-client)))
         compiled-client' (select-keys compiled-client (conj shared-keys "*"))
-        [_ algorithms] (first (prioritized-preferences compiled-client'))]
+        [_ algorithms] (first (prioritized-preferences (vals compiled-client')))]
     (cond
       (contains? algorithms "*")
       (second
