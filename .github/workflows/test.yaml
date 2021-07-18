@@ -4,6 +4,7 @@ on:
       - "src/**"
       - "test/**"
       - "resources/**"
+      - ".github/workflows/test.yaml"
 jobs:
   build:
     runs-on: ubuntu-latest
