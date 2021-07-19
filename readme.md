@@ -16,6 +16,8 @@ There are other Clojure libraries that offer gzip compression, but they don't pe
 libraries I'm aware of also spawn an extra thread per request to pump a pair of piped streams. That extra thread can be
 avoided through use of a custom implementation of ring's `StreamableResponseBody` protocol.
 
+The performance overhead is quite small at ~50μs above not using the middleware at all.
+
 ---
 
 ### Basic Usage
