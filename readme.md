@@ -26,7 +26,9 @@ The Clojure performance overhead is quite small at ~50μs above not using the mi
 ### Basic Usage
 
 This library provides reasonable defaults so most users should benefit from using the middleware with no additional
-configuration.
+configuration. You should place this middleware around the exterior of your application. Be aware that the body in
+the response map when compression applies will be a reification of the `StreamableResponseBody` protocol and less
+tangible than an input stream / byte array / string as you may expect in existing tests.
 
 ```clojure
 
