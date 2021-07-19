@@ -3,7 +3,8 @@
             [ring-compression.core :refer :all]
             [ring.core.protocols :as protos])
   (:import (java.io ByteArrayOutputStream ByteArrayInputStream)
-           (java.util.zip GZIPInputStream InflaterInputStream)))
+           (java.util.zip GZIPInputStream InflaterInputStream)
+           (com.nixxcode.jvmbrotli.dec BrotliInputStream)))
 
 (deftest parsing-headers-test
   (testing "no header defaults to server preferences"
@@ -54,9 +55,19 @@
    :body    "content content content content"})
 
 (deftest wrap-compression-test
+  (testing "brotli compression"
+    (let [handler  (wrap-compression mock-handler)
+          request  {:headers {"Accept-Encoding" "br"}}
+          response (handler request)]
+      (is (= "br" (get-in response [:headers "Content-Encoding"])))
+      (is (= "content content content content"
+             (with-open [out (ByteArrayOutputStream.)]
+               (protos/write-body-to-stream (:body response) response out)
+               (slurp (BrotliInputStream. (ByteArrayInputStream. (.toByteArray out)))))))))
+
   (testing "gzip compression"
     (let [handler  (wrap-compression mock-handler)
-          request  {:headers {"Accept-Encoding" "br, gzip, deflate"}}
+          request  {:headers {"Accept-Encoding" "gzip"}}
           response (handler request)]
       (is (= "gzip" (get-in response [:headers "Content-Encoding"])))
       (is

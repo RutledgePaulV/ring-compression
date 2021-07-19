@@ -39,10 +39,17 @@
 (def default-gzip-class "java.util.zip.GZIPOutputStream")
 (def default-deflate-class "java.util.zip.DeflaterOutputStream")
 (def default-brotli-class "org.brotli.wrapper.enc.BrotliOutputStream")
+(def alternative-brotli-class "com.nixxcode.jvmbrotli.enc.BrotliOutputStream")
+(def has-default-brotli (has-class? default-brotli-class))
+(def has-alternative-brotli (has-class? alternative-brotli-class))
 
 (def prefer-brotli
   (cond-> []
-    (has-class? default-brotli-class)
+    has-default-brotli
+    (conj {:algorithm "br" :priority 1.0})
+    (and (not has-default-brotli)
+         has-alternative-brotli
+         (eval `(com.nixxcode.jvmbrotli.common.BrotliLoader/isBrotliAvailable)))
     (conj {:algorithm "br" :priority 1.0})
     (has-class? default-gzip-class)
     (conj {:algorithm "gzip" :priority 0.9})
@@ -52,14 +59,23 @@
 (def prefer-gzip
   (cond-> []
     (has-class? default-gzip-class)
-    (conj {:algorithm "gzip" :priority 0.9})
+    (conj {:algorithm "gzip" :priority 1.0})
+    has-default-brotli
+    (conj {:algorithm "br" :priority 0.9})
+    (and (not has-default-brotli)
+         has-alternative-brotli
+         (eval `(com.nixxcode.jvmbrotli.common.BrotliLoader/isBrotliAvailable)))
+    (conj {:algorithm "br" :priority 0.9})
     (has-class? default-deflate-class)
     (conj {:algorithm "deflate" :priority 0.8})))
 
 (def default-preferences-by-content-type
-  {"text/*"                   prefer-brotli
+  {"text/javascript"          prefer-brotli
+   "text/css"                 prefer-brotli
+   "text/html"                prefer-brotli
    "application/javascript"   prefer-brotli
-   "image/svg+xml"            prefer-brotli
+   "text/*"                   prefer-gzip
+   "image/svg+xml"            prefer-gzip
    "application/json"         prefer-gzip
    "application/xml"          prefer-gzip
    "application/edn"          prefer-gzip
@@ -72,7 +88,13 @@
    "deflate"  (fn [^OutputStream stream]
                 (DeflaterOutputStream. stream))
    "br"       (fn [^OutputStream stream]
-                (construct-dynamic default-brotli-class stream))
+                (cond
+                  has-default-brotli
+                  (construct-dynamic default-brotli-class stream)
+                  has-alternative-brotli
+                  (construct-dynamic alternative-brotli-class stream)
+                  :otherwise
+                  (throw (ex-info "Brotli not properly configured." {}))))
    "identity" identity})
 
 (defn finalize-preferences [preferences]
