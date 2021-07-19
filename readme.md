@@ -17,7 +17,7 @@ version of <a href="https://github.com/google/brotli">brotli</a> on your classpa
 
 There are other Clojure libraries that offer gzip compression, but they don't perform encoding negotiation. The
 libraries I'm aware of also spawn an extra thread per request to pump a pair of piped streams. That extra thread can be
-avoided through use of a custom implementation of ring's `StreamableResponseBody` protocol.
+avoided through use of a custom implementation of ring's `StreamableResponseBody` protocol as implemented here.
 
 The performance overhead is quite small at ~50μs above not using the middleware at all.
 
