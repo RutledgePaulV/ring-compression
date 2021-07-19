@@ -30,12 +30,15 @@ configuration.
 
 ```clojure
 
+(require '[ring.adapter.jetty :as jetty])
+(require '[ring-compression.core :as compress])
+
 (defn application [request]
   {:status  200
    :headers {"Content-Type" "text/plain"}
    :body    "content content content content"})
 
-(def wrapped (wrap-compression application))
+(def wrapped (compress/wrap-compression application))
 
 (jetty/run-jetty wrapped {:port 3000 :join? false})
 
