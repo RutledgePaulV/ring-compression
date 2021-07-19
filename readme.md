@@ -46,6 +46,14 @@ configuration.
 
 ---
 
+### Alternatives
+
+- https://github.com/bertrandk/ring-gzip
+- https://github.com/clj-commons/ring-gzip-middleware
+- https://martintrojer.github.io/clojure/2015/10/04/enable-gzip-with-ring-and-jetty
+
+---
+
 ### License
 
 This project is licensed under [MIT license](http://opensource.org/licenses/MIT).
