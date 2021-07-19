@@ -2,7 +2,7 @@
   (:require [clojure.tools.build.api :as b]))
 
 (def lib 'io.github.rutledgepaulv/ring-compression)
-(def version "1.0.0")
+(def version "1.0.1")
 (def class-dir "target/classes")
 (def basis (b/create-basis {:project "deps.edn"}))
 (def jar-file (format "target/ring-compression.jar" (name lib) version))
