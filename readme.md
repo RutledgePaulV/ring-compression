@@ -1,3 +1,6 @@
+[![.github/workflows/test.yaml](https://github.com/RutledgePaulV/ring-compression/actions/workflows/test.yaml/badge.svg?branch=master)](https://github.com/RutledgePaulV/ring-compression/actions/workflows/test.yaml)
+[![Clojars Project](https://img.shields.io/clojars/v/io.github.rutledgepaulv/ring-compression.svg)](https://clojars.org/io.github.rutledgepaulv/ring-compression)
+
 <img src="./docs/logo.png" title="ring-compression" width="300" height="300" align="left" padding="5px"/>
 <small>
 <br/><br/><br/><br/><br/>

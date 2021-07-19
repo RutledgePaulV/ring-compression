@@ -2,9 +2,14 @@
  {ring/ring-core {:mvn/version "1.9.4"}}
 
  :aliases
- {:test {:extra-paths ["test"]
-         :extra-deps  {io.github.cognitect-labs/test-runner
-                       {:git/url "https://github.com/cognitect-labs/test-runner.git"
-                        :sha     "4e7e1c0dfd5291fa2134df052443dc29695d8cbe"}}
-         :main-opts   ["-m" "cognitect.test-runner"]
-         :exec-fn     cognitect.test-runner.api/test}}}
+ {:build {:extra-deps  {io.github.clojure/tools.build
+                        {:git/url "https://github.com/clojure/tools.build.git"
+                         :sha     "fcd265d32c715f606a2602c8b50270f0060d6b4c"}}
+          :extra-paths ["builds"]
+          :ns-default  build}
+  :test  {:extra-paths ["test"]
+          :extra-deps  {io.github.cognitect-labs/test-runner
+                        {:git/url "https://github.com/cognitect-labs/test-runner.git"
+                         :sha     "4e7e1c0dfd5291fa2134df052443dc29695d8cbe"}}
+          :main-opts   ["-m" "cognitect.test-runner"]
+          :exec-fn     cognitect.test-runner.api/test}}}
