@@ -98,11 +98,12 @@ server-side priorities will be leveraged to break the tie.
 
 You can include [another dependency](https://github.com/nixxcode/jvm-brotli) in your project to enable brotli. Brotli is
 an order of magnitude slower to compress than gzip, but it has higher compression ratios and is just as quick as gzip to
-decompress. It is therefore better for clients but not as good for servers.
+decompress. It is therefore better for clients but not as good for on the fly compression. You are probably better off 
+sticking to gzip, compressing your static textual assets with brotli ahead of time, or configuring a layer of caching 
+as well.
 
-If present, brotli will be used on any html/css/javascript responses but gzip will be used on more latency sensitive
-edn/json/transit/xml responses. Using brotli for on-the-fly compression is somewhat frowned upon, and you'd be better
-off compressing your static textual assets ahead of time or caching the result.
+If present, brotli will be used (by default) on any html/css/javascript responses but gzip will be used on more latency 
+sensitive edn/json/transit/xml responses.
 
 ```clojure
 
