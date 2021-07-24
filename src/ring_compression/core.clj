@@ -265,4 +265,4 @@
                 current-cache (deref cache)]
             (if (contains? current-cache cache-key)
               (respond (get current-cache cache-key))
-              (handler request (fn [response] (caching-response cache cache-key response)) raise)))))))))
+              (handler request (fn [response] (respond (caching-response cache cache-key response))) raise)))))))))
