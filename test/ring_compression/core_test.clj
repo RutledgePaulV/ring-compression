@@ -55,6 +55,17 @@
    :body    "content content content content"})
 
 (deftest wrap-compression-test
+
+  (testing "no accept encoding"
+    (let [handler  (wrap-compression mock-handler)
+          request  {}
+          response (handler request)]
+      (is (= "gzip" (get-in response [:headers "Content-Encoding"])))
+      (is (= "content content content content"
+             (with-open [out (ByteArrayOutputStream.)]
+               (protos/write-body-to-stream (:body response) response out)
+               (slurp (GZIPInputStream. (ByteArrayInputStream. (.toByteArray out)))))))))
+
   (testing "brotli compression"
     (let [handler  (wrap-compression mock-handler)
           request  {:headers {"Accept-Encoding" "br"}}
@@ -85,3 +96,28 @@
              (with-open [out (ByteArrayOutputStream.)]
                (protos/write-body-to-stream (:body response) response out)
                (slurp (InflaterInputStream. (ByteArrayInputStream. (.toByteArray out))))))))))
+
+
+(deftest wrap-caching-test
+  (testing "caching of brotli output"
+    (let [handler (wrap-response-caching
+                    (wrap-compression
+                      (let [state (atom true)]
+                        (fn [request]
+                          (if (swap! state not)
+                            (throw (ex-info "Error!" {}))
+                            {:status  200
+                             :headers {"Content-Type" "text/plain"}
+                             :body    (ByteArrayInputStream. (.getBytes "content content content content"))})))))
+          request {:headers        {"accept-encoding" "br"}
+                   :request-method :get :uri "/"}]
+      (let [response (handler request)]
+        (is (= "content content content content"
+               (with-open [out (ByteArrayOutputStream.)]
+                 (protos/write-body-to-stream (:body response) response out)
+                 (slurp (BrotliInputStream. (ByteArrayInputStream. (.toByteArray out))))))))
+      (let [response2 (handler request)]
+        (is (= "content content content content"
+               (with-open [out (ByteArrayOutputStream.)]
+                 (protos/write-body-to-stream (:body response2) response2 out)
+                 (slurp (BrotliInputStream. (ByteArrayInputStream. (.toByteArray out)))))))))))
