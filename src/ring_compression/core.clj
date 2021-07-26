@@ -215,7 +215,7 @@
    (letfn [(can-cache? [response]
              (if (ifn? cacheable-response?)
                (cacheable-response? response)
-               (< 200 (:status response) 299)))
+               (<= 200 (:status response) 299)))
            (compute-cache-key [request]
              (if (ifn? cache-key-fn)
                (cache-key-fn request)
@@ -232,9 +232,8 @@
                        (fn [original-body]
                          (reify protos/StreamableResponseBody
                            (write-body-to-stream [_ res output-stream]
-                             (let [cache-file
-                                   (doto (File/createTempFile "" ".res")
-                                     (.deleteOnExit))]
+                             (let [cache-file (doto (File/createTempFile "rcc" ".res")
+                                                (.deleteOnExit))]
                                (try
                                  (with-open
                                    [out (TeeOutputStream.
